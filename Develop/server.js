@@ -1,27 +1,21 @@
 const express = require('express');
-const path = require('path');
-const api = require('./routes/index.js');
-
-const PORT = process.env.port || 3001;
-
 const app = express();
+const PORT = process.env.PORT || 3000;
+const { v4: uuidv4 } = require('uuid');
 
-app.use(express.json());
+// Middleware setup
 app.use(express.urlencoded({ extended: true }));
-app.use('/api', api);
-
+app.use(express.json());
 app.use(express.static('public'));
 
+// Import routes with corrected paths
+const apiRoutes = require('./db/routes/apiRoutes');
+const htmlRoutes = require('./db/routes/htmlRoutes');
 
-app.get('/', (req, res) =>
-  res.sendFile(path.join(__dirname, '/public/index.html'))
-);
+// Use routes
+app.use('/api', apiRoutes);
+app.use('/', htmlRoutes);
 
-
-app.get('/notes', (req, res) =>
-  res.sendFile(path.join(__dirname, '/public/pages/notes.html'))
-);
-
-app.listen(PORT, () =>
-  console.log(`App listening at http://localhost:${PORT}`)
-);
+app.listen(PORT, () => {
+    console.log(`Server is listening on port ${PORT}`);
+});
