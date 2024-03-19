@@ -1,43 +1,48 @@
-const router = require('express').Router();
+const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-// Helper function to read data from db.json
+const router = express.Router();
+
+const dbFilePath = path.join(__dirname, '..', 'db.json');
+
 function readDbFile() {
-  const dbFilePath = path.join(__dirname, '..', 'db.json');
-  const dbData = fs.readFileSync(dbFilePath, 'utf8');
-  return JSON.parse(dbData);
+  try {
+    const dbData = fs.readFileSync(dbFilePath, 'utf8');
+    return JSON.parse(dbData);
+  } catch (error) {
+    console.error('Error reading database file:', error);
+    return [];
+  }
 }
 
-// Helper function to write data to db.json
 function writeDbFile(data) {
-  const dbFilePath = path.join(__dirname, '..', 'db.json');
-  fs.writeFileSync(dbFilePath, JSON.stringify(data), 'utf8');
+  try {
+    fs.writeFileSync(dbFilePath, JSON.stringify(data), 'utf8');
+  } catch (error) {
+    console.error('Error writing to database file:', error);
+  }
 }
 
-// GET route to return all saved notes
 router.get('/notes', (req, res) => {
-  const notes = readDbFile();
-  res.json(notes);
+  const currentNotes = readDbFile();
+  res.json(currentNotes);
 });
 
-// POST route to receive a new note, add it to db.json, and return the new note
 router.post('/notes', (req, res) => {
-  const notes = readDbFile();
+  const currentNotes = readDbFile();
   const newNote = { ...req.body, id: uuidv4() };
-  notes.push(newNote);
-  writeDbFile(notes);
+  currentNotes.push(newNote);
+  writeDbFile(currentNotes);
   res.json(newNote);
 });
 
-// DELETE route to delete a note by id
 router.delete('/notes/:id', (req, res) => {
-  const notes = readDbFile();
-  const filteredNotes = notes.filter(note => note.id !== req.params.id);
+  const currentNotes = readDbFile();
+  const filteredNotes = currentNotes.filter(note => note.id !== req.params.id);
   writeDbFile(filteredNotes);
   res.json({ message: 'Note has been deleted' });
 });
 
-// Export API routes
 module.exports = router;
